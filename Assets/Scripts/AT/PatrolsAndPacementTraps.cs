@@ -12,16 +12,34 @@ namespace NodeCanvas.Tasks.Actions {
         private float timer = 0f;
 
 		protected override void OnUpdate() {
-            Vector3 dir = new Vector3(Mathf.PerlinNoise(Time.time, 0f) - 0.5f, 0, Mathf.PerlinNoise(0f, Time.time) - 0.5f);
-            agent.transform.position += dir.normalized * moveSpeed * Time.deltaTime;
+            agent.GetComponent<Renderer>().material.color = Color.yellow;
 
+            // random moving direction
+            Vector3 dir = new Vector3(
+                Mathf.PerlinNoise(Time.time, 0f) - 0.5f,
+                0,
+                Mathf.PerlinNoise(0f, Time.time) - 0.5f
+            ).normalized;
+
+            // using rigidbody
+            if (agent.TryGetComponent<Rigidbody>(out var rb))
+            {
+                Vector3 nextPos = agent.transform.position + dir * moveSpeed * Time.deltaTime;
+                rb.MovePosition(nextPos);
+            }
+
+            // obstacles perfabs...
             timer += Time.deltaTime;
             if (timer >= interval)
             {
                 timer = 0f;
-                GameObject.Instantiate(obstaclePrefab, agent.transform.position + Vector3.forward * 1.5f, Quaternion.identity);
+
+                Vector3 spawnPos = agent.transform.position + new Vector3(1.5f, 0f, 1.5f);
+
+                // let the obstacle spawn on the ground,not in the sky...
+                spawnPos.y = 0.5f;
+                GameObject.Instantiate(obstaclePrefab, spawnPos, Quaternion.identity);
             }
-            EndAction(true);
         }
-	}
+    }
 }
